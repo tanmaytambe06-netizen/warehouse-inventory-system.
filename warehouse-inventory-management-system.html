@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Warehouse Inventory Management System</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; }
+    body { background-color: #ffffff; color: #333333; line-height: 1.5; display: flex; flex-direction: column; min-height: 100vh; }
+    .header { background-color: #0b5ed7; color: #ffffff; padding: 20px; text-align: center; border-bottom: 3px solid #084298; }
+    .header h1 { font-size: 24px; margin-bottom: 5px; }
+    .header p { font-size: 14px; color: #e9ecef; }
+    .navbar { background-color: #0a58ca; display: flex; justify-content: center; border-bottom: 1px solid #084298; }
+    .nav-btn { background-color: transparent; color: #ffffff; border: none; padding: 12px 22px; font-size: 15px; cursor: pointer; border-right: 1px solid #0d6efd; }
+    .nav-btn:hover, .nav-btn.active { background-color: #084298; }
+    .nav-btn.active { font-weight: bold; border-bottom: 3px solid #ffffff; }
+    .container { max-width: 1100px; width: 95%; margin: 25px auto; flex: 1; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    h2 { font-size: 20px; margin-bottom: 15px; border-bottom: 2px solid #e2e3e5; padding-bottom: 6px; color: #212529; }
+    h3 { font-size: 16px; margin-bottom: 10px; color: #495057; }
+    .alert { padding: 12px 16px; margin-bottom: 18px; border: 1px solid transparent; border-radius: 4px; font-size: 14px; }
+    .alert-success { background-color: #d1e7dd; border-color: #badbcc; color: #0f5132; }
+    .alert-error { background-color: #f8d7da; border-color: #f5c2c7; color: #842029; }
+    .hidden { display: none !important; }
+    .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+    .metric-box { background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; padding: 15px; text-align: center; }
+    .metric-box h3 { font-size: 14px; color: #6c757d; margin-bottom: 8px; }
+    .metric-box p { font-size: 26px; font-weight: bold; color: #0d6efd; overflow-wrap: anywhere; }
+    .alert-metric p { color: #dc3545; }
+    .threshold-setting { background-color: #f8f9fa; border: 1px solid #dee2e6; padding: 12px 15px; margin-bottom: 25px; display: flex; align-items: center; gap: 12px; border-radius: 4px; flex-wrap: wrap; }
+    .threshold-setting input { width: 90px; padding: 6px 8px; border: 1px solid #ced4da; border-radius: 4px; }
+    .form-container { background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; padding: 20px; margin-bottom: 25px; }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px; }
+    .form-group { display: flex; flex-direction: column; }
+    .form-group label { font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #495057; }
+    .form-group input, .form-group select { padding: 8px 10px; border: 1px solid #ced4da; border-radius: 4px; font-size: 14px; background-color: #ffffff; min-width: 0; }
+    .form-group input:focus, .form-group select:focus { outline: none; border-color: #86b7fe; }
+    .form-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .search-container { margin-bottom: 20px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .search-container input { padding: 8px 12px; border: 1px solid #ced4da; border-radius: 4px; width: 350px; max-width: 100%; }
+    .table-wrap { width: 100%; overflow-x: auto; margin-bottom: 30px; }
+    .data-table { width: 100%; border-collapse: collapse; min-width: 650px; }
+    .data-table th, .data-table td { border: 1px solid #dee2e6; padding: 10px 12px; text-align: left; font-size: 14px; }
+    .data-table th { background-color: #e9ecef; color: #212529; font-weight: bold; }
+    .data-table tbody tr:nth-child(even) { background-color: #fcfcfc; }
+    .data-table tbody tr:hover { background-color: #f1f3f5; }
+    .row-low-stock { background-color: #fff3cd !important; color: #664d03; }
+    .badge { display: inline-block; padding: 3px 8px; font-size: 12px; font-weight: bold; border-radius: 3px; white-space: nowrap; }
+    .badge-low { background-color: #f8d7da; color: #842029; border: 1px solid #f5c2c7; }
+    .badge-ok { background-color: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; }
+    .btn { padding: 8px 14px; border: none; border-radius: 4px; font-size: 14px; cursor: pointer; }
+    .btn-primary { background-color: #0d6efd; color: #ffffff; }
+    .btn-primary:hover { background-color: #0b5ed7; }
+    .btn-secondary { background-color: #6c757d; color: #ffffff; }
+    .btn-secondary:hover { background-color: #5c636a; }
+    .btn-danger { background-color: #dc3545; color: #ffffff; }
+    .btn-danger:hover { background-color: #bb2d3b; }
+    .btn-sm { padding: 4px 8px; font-size: 12px; margin-right: 4px; margin-bottom: 3px; }
+    .report-box { background-color: #f8f9fa; border: 1px solid #dee2e6; padding: 15px; margin-bottom: 25px; border-radius: 4px; }
+    .danger-zone { border: 1px solid #f5c2c7; background-color: #fff8f8; padding: 15px; border-radius: 4px; }
+    .footer { background-color: #f8f9fa; border-top: 1px solid #dee2e6; padding: 15px; text-align: center; font-size: 13px; color: #6c757d; margin-top: auto; }
+    @media (max-width: 768px) {
+      .navbar { flex-direction: column; }
+      .nav-btn { border-right: none; border-bottom: 1px solid #0d6efd; }
+      .form-grid { grid-template-columns: 1fr; }
+      .header h1 { font-size: 21px; }
+      .threshold-setting { align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <h1>Warehouse Inventory Management System</h1>
+    <p>Department of Computer Science &amp; Engineering - Mini Project</p>
+  </header>
+
+  <nav class="navbar" aria-label="Main navigation">
+    <button class="nav-btn active" type="button" onclick="switchTab('dashboard')">Dashboard</button>
+    <button class="nav-btn" type="button" onclick="switchTab('products')">Products</button>
+    <button class="nav-btn" type="button" onclick="switchTab('stock')">Stock Management</button>
+    <button class="nav-btn" type="button" onclick="switchTab('reports')">Reports</button>
+  </nav>
+
+  <main class="container">
+    <div id="alertBox" class="alert hidden" role="status" aria-live="polite"></div>
+
+    <section id="dashboard" class="tab-content active">
+      <h2>System Dashboard</h2>
+      <div class="metrics-grid">
+        <div class="metric-box"><h3>Total Products</h3><p id="totalProductsCount">0</p></div>
+        <div class="metric-box"><h3>Total Items in Stock</h3><p id="totalStockCount">0</p></div>
+        <div class="metric-box alert-metric"><h3>Low Stock Items</h3><p id="lowStockCount">0</p></div>
+        <div class="metric-box"><h3>Total Inventory Value</h3><p id="totalInventoryValue">₹0.00</p></div>
+      </div>
+      <div class="threshold-setting">
+        <label for="thresholdInput"><strong>Minimum Low Stock Level Alert:</strong></label>
+        <input type="number" id="thresholdInput" min="1" value="10">
+        <button class="btn btn-primary" type="button" onclick="updateThreshold()">Save Threshold</button>
+      </div>
+      <h3>Items Below Stock Threshold</h3>
+      <div class="table-wrap"><table class="data-table">
+        <thead><tr><th>Product ID</th><th>Name</th><th>Category</th><th>Current Quantity</th><th>Price</th><th>Status</th></tr></thead>
+        <tbody id="lowStockTableBody"></tbody>
+      </table></div>
+    </section>
+
+    <section id="products" class="tab-content">
+      <h2>Product Management</h2>
+      <div class="form-container">
+        <h3 id="formTitle">Add New Product</h3>
+        <form id="productForm">
+          <div class="form-grid">
+            <div class="form-group"><label for="prodId">Product ID:</label><input type="text" id="prodId" placeholder="e.g., P106" required></div>
+            <div class="form-group"><label for="prodName">Product Name:</label><input type="text" id="prodName" placeholder="e.g., Optical Mouse" required></div>
+            <div class="form-group"><label for="prodCategory">Category:</label><select id="prodCategory" required><option value="">-- Select Category --</option><option value="Electronics">Electronics</option><option value="Furniture">Furniture</option><option value="Hardware">Hardware</option><option value="Packaging">Packaging</option><option value="General">General</option></select></div>
+            <div class="form-group"><label for="prodQty">Quantity:</label><input type="number" id="prodQty" min="0" step="1" placeholder="0" required></div>
+            <div class="form-group"><label for="prodPrice">Price (₹):</label><input type="number" id="prodPrice" min="0" step="0.01" placeholder="0.00" required></div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" id="saveProdBtn" class="btn btn-primary">Save Product</button>
+            <button type="button" id="cancelEditBtn" class="btn btn-secondary hidden" onclick="cancelEdit()">Cancel Edit</button>
+          </div>
+        </form>
+      </div>
+      <div class="search-container"><label for="searchInput"><strong>Search Products:</strong></label><input type="text" id="searchInput" placeholder="Search by Product ID or Name..."></div>
+      <h3>Inventory Product List</h3>
+      <div class="table-wrap"><table class="data-table">
+        <thead><tr><th>Product ID</th><th>Name</th><th>Category</th><th>Quantity</th><th>Price (₹)</th><th>Total Value (₹)</th><th>Actions</th></tr></thead>
+        <tbody id="productTableBody"></tbody>
+      </table></div>
+    </section>
+
+    <section id="stock" class="tab-content">
+      <h2>Stock In / Stock Out</h2>
+      <div class="form-container">
+        <form id="stockForm">
+          <div class="form-grid">
+            <div class="form-group"><label for="stockSelectProd">Select Product:</label><select id="stockSelectProd" required><option value="">-- Select Product --</option></select></div>
+            <div class="form-group"><label for="stockAction">Operation:</label><select id="stockAction" required><option value="add">Add Stock (Arrival / Restock)</option><option value="reduce">Reduce Stock (Dispatch / Sale)</option></select></div>
+            <div class="form-group"><label for="stockQty">Quantity:</label><input type="number" id="stockQty" min="1" step="1" placeholder="Enter amount" required></div>
+          </div>
+          <div class="form-actions"><button type="submit" class="btn btn-primary">Update Stock</button></div>
+        </form>
+      </div>
+      <h3>Current Stock Quick View</h3>
+      <div class="table-wrap"><table class="data-table">
+        <thead><tr><th>Product ID</th><th>Product Name</th><th>Available Quantity</th><th>Stock Status</th></tr></thead>
+        <tbody id="stockQuickViewBody"></tbody>
+      </table></div>
+    </section>
+
+    <section id="reports" class="tab-content">
+      <h2>Inventory Summary &amp; Reports</h2>
+      <div class="report-box"><h3>System Status Overview</h3><p>Category breakdown calculated from the current browser's LocalStorage data:</p><div id="reportSummaryText" style="margin-top: 10px;"></div></div>
+      <div class="danger-zone"><h3>Database Management</h3><p style="margin-bottom: 10px;">Reset the inventory to the initial demo products.</p><button class="btn btn-danger" type="button" onclick="resetToSampleData()">Reset to Sample Data</button></div>
+    </section>
+  </main>
+
+  <footer class="footer"><p>&copy; 2026 Warehouse Inventory Management System | College Engineering Project</p></footer>
+
+  <script>
+    const SAMPLE_PRODUCTS = [
+      { id: "P101", name: "Dell Optical Mouse", category: "Electronics", quantity: 45, price: 450.00 },
+      { id: "P102", name: "Mechanical Keyboard", category: "Electronics", quantity: 8, price: 2499.00 },
+      { id: "P103", name: "Cardboard Box (Medium)", category: "Packaging", quantity: 120, price: 45.00 },
+      { id: "P104", name: "Adjustable Desk Chair", category: "Furniture", quantity: 4, price: 6500.00 },
+      { id: "P105", name: "Steel Screws (100-pack)", category: "Hardware", quantity: 75, price: 180.00 }
+    ];
+
+    let products = [];
+    let lowStockThreshold = 10;
+    let editMode = false;
+    let currentEditId = null;
+    let alertTimer = null;
+
+    function formatINR(amount) {
+      return "₹" + Number(amount).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      loadData();
+      renderAllViews();
+      document.getElementById("productForm").addEventListener("submit", handleProductFormSubmit);
+      document.getElementById("stockForm").addEventListener("submit", handleStockUpdate);
+      document.getElementById("searchInput").addEventListener("input", handleSearch);
+    });
+
+    function loadData() {
+      try {
+        const storedProducts = localStorage.getItem("warehouse_products_inr");
+        const storedThreshold = localStorage.getItem("warehouse_threshold_inr");
+        if (storedProducts) {
+          const parsed = JSON.parse(storedProducts);
+          products = Array.isArray(parsed) ? parsed : [...SAMPLE_PRODUCTS];
+        } else {
+          products = [...SAMPLE_PRODUCTS];
+          saveProducts();
+        }
+        if (storedThreshold !== null) {
+          const parsedThreshold = parseInt(storedThreshold, 10);
+          if (Number.isInteger(parsedThreshold) && parsedThreshold >= 1) lowStockThreshold = parsedThreshold;
+        }
+      } catch (error) {
+        products = [...SAMPLE_PRODUCTS];
+        showAlert("Saved browser data could not be read. Sample products have been loaded.", "error");
+      }
+      document.getElementById("thresholdInput").value = lowStockThreshold;
+    }
+
+    function saveProducts() {
+      try {
+        localStorage.setItem("warehouse_products_inr", JSON.stringify(products));
+      } catch (error) {
+        showAlert("Could not save data in this browser. Check storage settings.", "error");
+      }
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll(".tab-content").forEach(tab => tab.classList.toggle("active", tab.id === tabId));
+      document.querySelectorAll(".nav-btn").forEach(btn => btn.classList.toggle("active", btn.getAttribute("onclick").includes(tabId)));
+      renderAllViews();
+    }
+
+    function showAlert(message, type) {
+      const alertBox = document.getElementById("alertBox");
+      alertBox.className = `alert alert-${type}`;
+      alertBox.textContent = message;
+      alertBox.classList.remove("hidden");
+      if (alertTimer) clearTimeout(alertTimer);
+      alertTimer = setTimeout(() => alertBox.classList.add("hidden"), 3500);
+    }
+
+    function renderAllViews() {
+      renderDashboard();
+      const query = document.getElementById("searchInput").value.toLowerCase().trim();
+      renderProductTable(products.filter(p => p.id.toLowerCase().includes(query) || p.name.toLowerCase().includes(query)));
+      populateStockSelect();
+      renderStockQuickView();
+      renderReports();
+    }
+
+    function renderDashboard() {
+      let totalStock = 0, totalValue = 0;
+      const lowStockItems = [];
+      products.forEach(p => {
+        totalStock += Number(p.quantity);
+        totalValue += Number(p.quantity) * Number(p.price);
+        if (p.quantity <= lowStockThreshold) lowStockItems.push(p);
+      });
+      document.getElementById("totalProductsCount").textContent = products.length;
+      document.getElementById("totalStockCount").textContent = totalStock;
+      document.getElementById("lowStockCount").textContent = lowStockItems.length;
+      document.getElementById("totalInventoryValue").textContent = formatINR(totalValue);
+      const tbody = document.getElementById("lowStockTableBody");
+      tbody.replaceChildren();
+      if (!lowStockItems.length) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">All stock levels are adequate.</td></tr>';
+        return;
+      }
+      lowStockItems.forEach(p => {
+        const tr = document.createElement("tr");
+        tr.className = "row-low-stock";
+        [p.id, p.name, p.category, p.quantity, formatINR(p.price)].forEach(value => {
+          const td = document.createElement("td");
+          td.textContent = value;
+          tr.appendChild(td);
+        });
+        const status = document.createElement("td");
+        status.innerHTML = '<span class="badge badge-low">Low Stock</span>';
+        tr.appendChild(status);
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderProductTable(itemsToDisplay) {
+      const tbody = document.getElementById("productTableBody");
+      tbody.replaceChildren();
+      if (!itemsToDisplay.length) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No products found.</td></tr>';
+        return;
+      }
+      itemsToDisplay.forEach(p => {
+        const tr = document.createElement("tr");
+        const isLow = p.quantity <= lowStockThreshold;
+        if (isLow) tr.className = "row-low-stock";
+        [p.id, p.name, p.category].forEach(value => {
+          const td = document.createElement("td");
+          td.textContent = value;
+          tr.appendChild(td);
+        });
+        const qty = document.createElement("td");
+        qty.textContent = p.quantity + (isLow ? " — Low Stock" : "");
+        tr.appendChild(qty);
+        [formatINR(p.price), formatINR(p.quantity * p.price)].forEach(value => {
+          const td = document.createElement("td");
+          td.textContent = value;
+          tr.appendChild(td);
+        });
+        const actions = document.createElement("td");
+        const editBtn = document.createElement("button");
+        editBtn.className = "btn btn-primary btn-sm";
+        editBtn.textContent = "Edit";
+        editBtn.addEventListener("click", () => editProduct(p.id));
+        const deleteBtn = document.createElement("button");
+        deleteBtn.className = "btn btn-danger btn-sm";
+        deleteBtn.textContent = "Delete";
+        deleteBtn.addEventListener("click", () => deleteProduct(p.id));
+        actions.append(editBtn, deleteBtn);
+        tr.appendChild(actions);
+        tbody.appendChild(tr);
+      });
+    }
+
+    function handleProductFormSubmit(event) {
+      event.preventDefault();
+      const id = document.getElementById("prodId").value.trim();
+      const name = document.getElementById("prodName").value.trim();
+      const category = document.getElementById("prodCategory").value;
+      const quantity = Number(document.getElementById("prodQty").value);
+      const price = Number(document.getElementById("prodPrice").value);
+
+      if (!id || !name || !category || !Number.isInteger(quantity) || !Number.isFinite(price)) {
+        showAlert("Please fill in all fields with valid information.", "error");
+        return;
+      }
+      if (quantity < 0 || price < 0) {
+        showAlert("Quantity and price cannot be negative.", "error");
+        return;
+      }
+
+      if (editMode) {
+        const index = products.findIndex(p => p.id === currentEditId);
+        if (index === -1) {
+          showAlert("Product could not be found. Please try again.", "error");
+          cancelEdit();
+          return;
+        }
+        products[index] = { ...products[index], name, category, quantity, price };
+        showAlert(`Product "${name}" updated successfully.`, "success");
+        cancelEdit();
+      } else {
+        if (products.some(p => p.id.toLowerCase() === id.toLowerCase())) {
+          showAlert(`Product ID "${id}" already exists. Use a unique ID.`, "error");
+          return;
+        }
+        products.push({ id, name, category, quantity, price });
+        showAlert(`Product "${name}" added successfully.`, "success");
+        document.getElementById("productForm").reset();
+      }
+      saveProducts();
+      renderAllViews();
+    }
+
+    function editProduct(id) {
+      const prod = products.find(p => p.id === id);
+      if (!prod) return;
+      switchTab("products");
+      editMode = true;
+      currentEditId = prod.id;
+      document.getElementById("formTitle").textContent = `Edit Product (${prod.id})`;
+      document.getElementById("prodId").value = prod.id;
+      document.getElementById("prodId").disabled = true;
+      document.getElementById("prodName").value = prod.name;
+      document.getElementById("prodCategory").value = prod.category;
+      document.getElementById("prodQty").value = prod.quantity;
+      document.getElementById("prodPrice").value = prod.price;
+      document.getElementById("saveProdBtn").textContent = "Update Product";
+      document.getElementById("cancelEditBtn").classList.remove("hidden");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function cancelEdit() {
+      editMode = false;
+      currentEditId = null;
+      document.getElementById("productForm").reset();
+      document.getElementById("prodId").disabled = false;
+      document.getElementById("formTitle").textContent = "Add New Product";
+      document.getElementById("saveProdBtn").textContent = "Save Product";
+      document.getElementById("cancelEditBtn").classList.add("hidden");
+    }
+
+    function deleteProduct(id) {
+      if (!confirm(`Are you sure you want to delete Product ID: ${id}?`)) return;
+      products = products.filter(p => p.id !== id);
+      saveProducts();
+      showAlert(`Product ${id} has been deleted.`, "success");
+      if (editMode && currentEditId === id) cancelEdit();
+      renderAllViews();
+    }
+
+    function handleSearch() {
+      const query = document.getElementById("searchInput").value.toLowerCase().trim();
+      renderProductTable(products.filter(p => p.id.toLowerCase().includes(query) || p.name.toLowerCase().includes(query)));
+    }
+
+    function populateStockSelect() {
+      const select = document.getElementById("stockSelectProd");
+      const previousValue = select.value;
+      select.replaceChildren(new Option("-- Select Product --", ""));
+      products.forEach(p => select.add(new Option(`${p.id} - ${p.name} (Current: ${p.quantity})`, p.id)));
+      if (products.some(p => p.id === previousValue)) select.value = previousValue;
+    }
+
+    function handleStockUpdate(event) {
+      event.preventDefault();
+      const prodId = document.getElementById("stockSelectProd").value;
+      const action = document.getElementById("stockAction").value;
+      const changeQty = Number(document.getElementById("stockQty").value);
+      if (!prodId) return showAlert("Please select a product.", "error");
+      if (!Number.isInteger(changeQty) || changeQty <= 0) return showAlert("Please enter a whole-number quantity greater than zero.", "error");
+      const prod = products.find(p => p.id === prodId);
+      if (!prod) return;
+      if (action === "add") {
+        prod.quantity += changeQty;
+        showAlert(`Added ${changeQty} units to ${prod.name}. New quantity: ${prod.quantity}`, "success");
+      } else {
+        if (prod.quantity - changeQty < 0) return showAlert(`Cannot dispatch ${changeQty} units. Only ${prod.quantity} available in stock.`, "error");
+        prod.quantity -= changeQty;
+        showAlert(`Dispatched ${changeQty} units from ${prod.name}. Remaining: ${prod.quantity}`, "success");
+      }
+      saveProducts();
+      document.getElementById("stockQty").value = "";
+      renderAllViews();
+    }
+
+    function renderStockQuickView() {
+      const tbody = document.getElementById("stockQuickViewBody");
+      tbody.replaceChildren();
+      products.forEach(p => {
+        const tr = document.createElement("tr");
+        const isLow = p.quantity <= lowStockThreshold;
+        [p.id, p.name, p.quantity].forEach(value => {
+          const td = document.createElement("td");
+          td.textContent = value;
+          tr.appendChild(td);
+        });
+        const status = document.createElement("td");
+        status.innerHTML = `<span class="badge ${isLow ? "badge-low" : "badge-ok"}">${isLow ? "Low Stock Warning" : "In Stock"}</span>`;
+        tr.appendChild(status);
+        tbody.appendChild(tr);
+      });
+    }
+
+    function updateThreshold() {
+      const val = Number(document.getElementById("thresholdInput").value);
+      if (!Number.isInteger(val) || val < 1) return showAlert("Please enter a valid whole-number threshold of 1 or more.", "error");
+      lowStockThreshold = val;
+      try { localStorage.setItem("warehouse_threshold_inr", String(lowStockThreshold)); } catch (error) {}
+      showAlert(`Minimum low stock threshold updated to ${lowStockThreshold} units.`, "success");
+      renderAllViews();
+    }
+
+    function renderReports() {
+      const summaryBox = document.getElementById("reportSummaryText");
+      const categories = {};
+      products.forEach(p => { categories[p.category] = (categories[p.category] || 0) + Number(p.quantity); });
+      const list = document.createElement("ul");
+      list.style.marginLeft = "20px";
+      Object.entries(categories).forEach(([category, total]) => {
+        const item = document.createElement("li");
+        const strong = document.createElement("strong");
+        strong.textContent = `${category}: `;
+        item.append(strong, document.createTextNode(`${total} total units stored`));
+        list.appendChild(item);
+      });
+      summaryBox.replaceChildren();
+      const heading = document.createElement("p");
+      const strong = document.createElement("strong");
+      strong.textContent = "Stock Breakdown by Category:";
+      heading.appendChild(strong);
+      summaryBox.append(heading, list);
+      if (!products.length) summaryBox.appendChild(document.createTextNode("No products currently in inventory."));
+    }
+
+    function resetToSampleData() {
+      if (!confirm("Are you sure you want to reset all data back to original sample items?")) return;
+      products = SAMPLE_PRODUCTS.map(p => ({ ...p }));
+      lowStockThreshold = 10;
+      saveProducts();
+      try { localStorage.setItem("warehouse_threshold_inr", "10"); } catch (error) {}
+      document.getElementById("thresholdInput").value = 10;
+      cancelEdit();
+      showAlert("Warehouse data reset to initial sample data.", "success");
+      renderAllViews();
+    }
+  </script>
+</body>
+</html>
