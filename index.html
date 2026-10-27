@@ -3,485 +3,895 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Warehouse Inventory Management System</title>
+  <title>Retail Shop Inventory Tracker & Demand Forecaster</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; }
-    body { background-color: #ffffff; color: #333333; line-height: 1.5; display: flex; flex-direction: column; min-height: 100vh; }
-    .header { background-color: #0b5ed7; color: #ffffff; padding: 20px; text-align: center; border-bottom: 3px solid #084298; }
-    .header h1 { font-size: 24px; margin-bottom: 5px; }
-    .header p { font-size: 14px; color: #e9ecef; }
-    .navbar { background-color: #0a58ca; display: flex; justify-content: center; border-bottom: 1px solid #084298; }
-    .nav-btn { background-color: transparent; color: #ffffff; border: none; padding: 12px 22px; font-size: 15px; cursor: pointer; border-right: 1px solid #0d6efd; }
-    .nav-btn:hover, .nav-btn.active { background-color: #084298; }
-    .nav-btn.active { font-weight: bold; border-bottom: 3px solid #ffffff; }
-    .container { max-width: 1100px; width: 95%; margin: 25px auto; flex: 1; }
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
-    h2 { font-size: 20px; margin-bottom: 15px; border-bottom: 2px solid #e2e3e5; padding-bottom: 6px; color: #212529; }
-    h3 { font-size: 16px; margin-bottom: 10px; color: #495057; }
-    .alert { padding: 12px 16px; margin-bottom: 18px; border: 1px solid transparent; border-radius: 4px; font-size: 14px; }
-    .alert-success { background-color: #d1e7dd; border-color: #badbcc; color: #0f5132; }
-    .alert-error { background-color: #f8d7da; border-color: #f5c2c7; color: #842029; }
-    .hidden { display: none !important; }
-    .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
-    .metric-box { background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; padding: 15px; text-align: center; }
-    .metric-box h3 { font-size: 14px; color: #6c757d; margin-bottom: 8px; }
-    .metric-box p { font-size: 26px; font-weight: bold; color: #0d6efd; overflow-wrap: anywhere; }
-    .alert-metric p { color: #dc3545; }
-    .threshold-setting { background-color: #f8f9fa; border: 1px solid #dee2e6; padding: 12px 15px; margin-bottom: 25px; display: flex; align-items: center; gap: 12px; border-radius: 4px; flex-wrap: wrap; }
-    .threshold-setting input { width: 90px; padding: 6px 8px; border: 1px solid #ced4da; border-radius: 4px; }
-    .form-container { background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; padding: 20px; margin-bottom: 25px; }
-    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px; }
-    .form-group { display: flex; flex-direction: column; }
-    .form-group label { font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #495057; }
-    .form-group input, .form-group select { padding: 8px 10px; border: 1px solid #ced4da; border-radius: 4px; font-size: 14px; background-color: #ffffff; min-width: 0; }
-    .form-group input:focus, .form-group select:focus { outline: none; border-color: #86b7fe; }
-    .form-actions { display: flex; gap: 10px; flex-wrap: wrap; }
-    .search-container { margin-bottom: 20px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .search-container input { padding: 8px 12px; border: 1px solid #ced4da; border-radius: 4px; width: 350px; max-width: 100%; }
-    .table-wrap { width: 100%; overflow-x: auto; margin-bottom: 30px; }
-    .data-table { width: 100%; border-collapse: collapse; min-width: 650px; }
-    .data-table th, .data-table td { border: 1px solid #dee2e6; padding: 10px 12px; text-align: left; font-size: 14px; }
-    .data-table th { background-color: #e9ecef; color: #212529; font-weight: bold; }
-    .data-table tbody tr:nth-child(even) { background-color: #fcfcfc; }
-    .data-table tbody tr:hover { background-color: #f1f3f5; }
-    .row-low-stock { background-color: #fff3cd !important; color: #664d03; }
-    .badge { display: inline-block; padding: 3px 8px; font-size: 12px; font-weight: bold; border-radius: 3px; white-space: nowrap; }
-    .badge-low { background-color: #f8d7da; color: #842029; border: 1px solid #f5c2c7; }
-    .badge-ok { background-color: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; }
-    .btn { padding: 8px 14px; border: none; border-radius: 4px; font-size: 14px; cursor: pointer; }
-    .btn-primary { background-color: #0d6efd; color: #ffffff; }
-    .btn-primary:hover { background-color: #0b5ed7; }
-    .btn-secondary { background-color: #6c757d; color: #ffffff; }
-    .btn-secondary:hover { background-color: #5c636a; }
-    .btn-danger { background-color: #dc3545; color: #ffffff; }
-    .btn-danger:hover { background-color: #bb2d3b; }
-    .btn-sm { padding: 4px 8px; font-size: 12px; margin-right: 4px; margin-bottom: 3px; }
-    .report-box { background-color: #f8f9fa; border: 1px solid #dee2e6; padding: 15px; margin-bottom: 25px; border-radius: 4px; }
-    .danger-zone { border: 1px solid #f5c2c7; background-color: #fff8f8; padding: 15px; border-radius: 4px; }
-    .footer { background-color: #f8f9fa; border-top: 1px solid #dee2e6; padding: 15px; text-align: center; font-size: 13px; color: #6c757d; margin-top: auto; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body {
+      background-color: #ffffff;
+      color: #333333;
+      line-height: 1.5;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* Header */
+    .header {
+      background-color: #0b5ed7;
+      color: #ffffff;
+      padding: 20px;
+      text-align: center;
+      border-bottom: 3px solid #084298;
+    }
+
+    .header h1 {
+      font-size: 24px;
+      margin-bottom: 5px;
+    }
+
+    .header p {
+      font-size: 14px;
+      color: #e9ecef;
+    }
+
+    /* Main Container */
+    .container {
+      max-width: 1200px;
+      width: 95%;
+      margin: 20px auto;
+      flex: 1;
+    }
+
+    /* System Tabs */
+    .navbar {
+      display: flex;
+      gap: 5px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #0d6efd;
+    }
+
+    .nav-btn {
+      background-color: #e9ecef;
+      color: #0b5ed7;
+      border: 1px solid #ced4da;
+      border-bottom: none;
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 4px 4px 0 0;
+    }
+
+    .nav-btn.active {
+      background-color: #0d6efd;
+      color: #ffffff;
+      border-color: #0d6efd;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* KPI Cards */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    .metric-box {
+      background-color: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      padding: 15px;
+      text-align: center;
+    }
+
+    .metric-box h3 {
+      font-size: 13px;
+      color: #6c757d;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+
+    .metric-box p {
+      font-size: 24px;
+      font-weight: bold;
+      color: #0d6efd;
+    }
+
+    .metric-box.alert p {
+      color: #dc3545;
+    }
+
+    /* Notification Box */
+    .alert {
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .alert-success {
+      background-color: #d1e7dd;
+      border: 1px solid #badbcc;
+      color: #0f5132;
+    }
+
+    .alert-error {
+      background-color: #f8d7da;
+      border: 1px solid #f5c2c7;
+      color: #842029;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* Form Container */
+    .form-container {
+      background-color: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      padding: 20px;
+      margin-bottom: 25px;
+    }
+
+    .form-container h3 {
+      font-size: 16px;
+      color: #0b5ed7;
+      margin-bottom: 12px;
+      border-bottom: 1px solid #dee2e6;
+      padding-bottom: 6px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-group label {
+      font-size: 12px;
+      font-weight: bold;
+      margin-bottom: 4px;
+      color: #495057;
+    }
+
+    .form-group input,
+    .form-group select {
+      padding: 8px 10px;
+      border: 1px solid #ced4da;
+      border-radius: 4px;
+      font-size: 14px;
+      background-color: #ffffff;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #86b7fe;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    /* Search & Filter Bar */
+    .search-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+    }
+
+    .search-bar input {
+      flex: 1;
+      min-width: 260px;
+      padding: 8px 12px;
+      border: 1px solid #ced4da;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    /* Data Tables */
+    .table-responsive {
+      overflow-x: auto;
+      margin-bottom: 25px;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .data-table th,
+    .data-table td {
+      border: 1px solid #dee2e6;
+      padding: 9px 10px;
+      text-align: left;
+    }
+
+    .data-table th {
+      background-color: #e9ecef;
+      color: #212529;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+
+    .data-table tbody tr:nth-child(even) {
+      background-color: #fcfcfc;
+    }
+
+    .data-table tbody tr:hover {
+      background-color: #f1f3f5;
+    }
+
+    .row-reorder-needed {
+      background-color: #fff3cd !important;
+      color: #664d03;
+    }
+
+    /* Status Badges */
+    .badge {
+      display: inline-block;
+      padding: 3px 6px;
+      font-size: 11px;
+      font-weight: bold;
+      border-radius: 3px;
+      white-space: nowrap;
+    }
+
+    .badge-reorder {
+      background-color: #f8d7da;
+      color: #842029;
+      border: 1px solid #f5c2c7;
+    }
+
+    .badge-ok {
+      background-color: #d1e7dd;
+      color: #0f5132;
+      border: 1px solid #badbcc;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 8px 14px;
+      border: none;
+      border-radius: 4px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background-color: #0d6efd;
+      color: #ffffff;
+    }
+
+    .btn-primary:hover {
+      background-color: #0b5ed7;
+    }
+
+    .btn-secondary {
+      background-color: #6c757d;
+      color: #ffffff;
+    }
+
+    .btn-secondary:hover {
+      background-color: #5c636a;
+    }
+
+    .btn-danger {
+      background-color: #dc3545;
+      color: #ffffff;
+    }
+
+    .btn-danger:hover {
+      background-color: #bb2d3b;
+    }
+
+    .btn-sm {
+      padding: 4px 8px;
+      font-size: 12px;
+      margin-right: 3px;
+    }
+
+    /* Formula Explanation Box */
+    .info-card {
+      background-color: #e7f1ff;
+      border: 1px solid #b6d4fe;
+      border-radius: 4px;
+      padding: 15px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      color: #084298;
+    }
+
+    .info-card ul {
+      margin-left: 20px;
+      margin-top: 6px;
+    }
+
+    /* Footer */
+    .footer {
+      background-color: #f8f9fa;
+      border-top: 1px solid #dee2e6;
+      padding: 14px;
+      text-align: center;
+      font-size: 12px;
+      color: #6c757d;
+      margin-top: auto;
+    }
+
     @media (max-width: 768px) {
-      .navbar { flex-direction: column; }
-      .nav-btn { border-right: none; border-bottom: 1px solid #0d6efd; }
-      .form-grid { grid-template-columns: 1fr; }
-      .header h1 { font-size: 21px; }
-      .threshold-setting { align-items: flex-start; }
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
 <body>
+
+  <!-- Header -->
   <header class="header">
-    <h1>Warehouse Inventory Management System</h1>
-    <p>Tambe Tanmay Deoram Mini Project</p>
+    <h1>Retail Shop Inventory Tracker</h1>
+    <p>Stock Monitoring, Reorder Level Management & Demand Forecasting</p>
   </header>
 
-  <nav class="navbar" aria-label="Main navigation">
-    <button class="nav-btn active" type="button" onclick="switchTab('dashboard')">Dashboard</button>
-    <button class="nav-btn" type="button" onclick="switchTab('products')">Products</button>
-    <button class="nav-btn" type="button" onclick="switchTab('stock')">Stock Management</button>
-    <button class="nav-btn" type="button" onclick="switchTab('reports')">Reports</button>
-  </nav>
+  <div class="container">
 
-  <main class="container">
-    <div id="alertBox" class="alert hidden" role="status" aria-live="polite"></div>
+    <!-- Alert / Toast Message -->
+    <div id="alertBox" class="alert hidden"></div>
 
-    <section id="dashboard" class="tab-content active">
-      <h2>System Dashboard</h2>
+    <!-- Navigation Tabs -->
+    <div class="navbar">
+      <button class="nav-btn active" onclick="switchTab('inventory-tab')">Inventory & Forecasting</button>
+      <button class="nav-btn" onclick="switchTab('operations-tab')">Daily Sales / Restock</button>
+      <button class="nav-btn" onclick="switchTab('guide-tab')">Formulas & Logic</button>
+    </div>
+
+    <!-- 1. MAIN INVENTORY & FORECASTING TAB -->
+    <section id="inventory-tab" class="tab-content active">
+
+      <!-- Executive Metrics -->
       <div class="metrics-grid">
-        <div class="metric-box"><h3>Total Products</h3><p id="totalProductsCount">0</p></div>
-        <div class="metric-box"><h3>Total Items in Stock</h3><p id="totalStockCount">0</p></div>
-        <div class="metric-box alert-metric"><h3>Low Stock Items</h3><p id="lowStockCount">0</p></div>
-        <div class="metric-box"><h3>Total Inventory Value</h3><p id="totalInventoryValue">₹0.00</p></div>
+        <div class="metric-box">
+          <h3>Total Retail Products</h3>
+          <p id="totalProductsCount">0</p>
+        </div>
+        <div class="metric-box">
+          <h3>Total Units On Hand</h3>
+          <p id="totalUnitsCount">0</p>
+        </div>
+        <div class="metric-box alert">
+          <h3>Items Needing Reorder</h3>
+          <p id="reorderAlertCount">0</p>
+        </div>
+        <div class="metric-box">
+          <h3>Inventory Valuation</h3>
+          <p id="totalValuation">₹0.00</p>
+        </div>
       </div>
-      <div class="threshold-setting">
-        <label for="thresholdInput"><strong>Minimum Low Stock Level Alert:</strong></label>
-        <input type="number" id="thresholdInput" min="1" value="10">
-        <button class="btn btn-primary" type="button" onclick="updateThreshold()">Save Threshold</button>
-      </div>
-      <h3>Items Below Stock Threshold</h3>
-      <div class="table-wrap"><table class="data-table">
-        <thead><tr><th>Product ID</th><th>Name</th><th>Category</th><th>Current Quantity</th><th>Price</th><th>Status</th></tr></thead>
-        <tbody id="lowStockTableBody"></tbody>
-      </table></div>
-    </section>
 
-    <section id="products" class="tab-content">
-      <h2>Product Management</h2>
+      <!-- Combined Master Form: Details + Forecasting + Reorder Config -->
       <div class="form-container">
-        <h3 id="formTitle">Add New Product</h3>
-        <form id="productForm">
+        <h3 id="formTitle">Register / Update Retail Product</h3>
+        <form id="productForm" onsubmit="handleProductSubmit(event)">
           <div class="form-grid">
-            <div class="form-group"><label for="prodId">Product ID:</label><input type="text" id="prodId" placeholder="e.g., P106" required></div>
-            <div class="form-group"><label for="prodName">Product Name:</label><input type="text" id="prodName" placeholder="e.g., Optical Mouse" required></div>
-            <div class="form-group"><label for="prodCategory">Category:</label><select id="prodCategory" required><option value="">-- Select Category --</option><option value="Electronics">Electronics</option><option value="Furniture">Furniture</option><option value="Hardware">Hardware</option><option value="Packaging">Packaging</option><option value="General">General</option></select></div>
-            <div class="form-group"><label for="prodQty">Quantity:</label><input type="number" id="prodQty" min="0" step="1" placeholder="0" required></div>
-            <div class="form-group"><label for="prodPrice">Price (₹):</label><input type="number" id="prodPrice" min="0" step="0.01" placeholder="0.00" required></div>
+            <div class="form-group">
+              <label for="prodId">Item / SKU Code:</label>
+              <input type="text" id="prodId" placeholder="e.g., RET-101" required>
+            </div>
+            <div class="form-group">
+              <label for="prodName">Item Name:</label>
+              <input type="text" id="prodName" placeholder="e.g., Basmati Rice 5kg" required>
+            </div>
+            <div class="form-group">
+              <label for="prodCategory">Category:</label>
+              <select id="prodCategory" required>
+                <option value="">-- Choose Category --</option>
+                <option value="Grocery">Grocery</option>
+                <option value="Packaged Foods">Packaged Foods</option>
+                <option value="Personal Care">Personal Care</option>
+                <option value="Beverages">Beverages</option>
+                <option value="Household">Household</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="prodPrice">Retail Unit Price (₹):</label>
+              <input type="number" id="prodPrice" min="0" step="0.5" placeholder="0.00" required>
+            </div>
+            <div class="form-group">
+              <label for="prodCurrentStock">Current Stock (Units):</label>
+              <input type="number" id="prodCurrentStock" min="0" placeholder="0" required>
+            </div>
+            <div class="form-group">
+              <label for="prodDailySales">Avg Daily Sales (Demand):</label>
+              <input type="number" id="prodDailySales" min="0" step="0.1" placeholder="e.g., 5" required>
+            </div>
+            <div class="form-group">
+              <label for="prodLeadTime">Supplier Lead Time (Days):</label>
+              <input type="number" id="prodLeadTime" min="1" placeholder="e.g., 3" required>
+            </div>
+            <div class="form-group">
+              <label for="prodSafetyStock">Safety Buffer Stock (Units):</label>
+              <input type="number" id="prodSafetyStock" min="0" placeholder="e.g., 10" required>
+            </div>
           </div>
           <div class="form-actions">
-            <button type="submit" id="saveProdBtn" class="btn btn-primary">Save Product</button>
-            <button type="button" id="cancelEditBtn" class="btn btn-secondary hidden" onclick="cancelEdit()">Cancel Edit</button>
+            <button type="submit" id="saveBtn" class="btn btn-primary">Save Product & Compute Forecast</button>
+            <button type="button" id="cancelBtn" class="btn btn-secondary hidden" onclick="cancelEdit()">Cancel</button>
           </div>
         </form>
       </div>
-      <div class="search-container"><label for="searchInput"><strong>Search Products:</strong></label><input type="text" id="searchInput" placeholder="Search by Product ID or Name..."></div>
-      <h3>Inventory Product List</h3>
-      <div class="table-wrap"><table class="data-table">
-        <thead><tr><th>Product ID</th><th>Name</th><th>Category</th><th>Quantity</th><th>Price (₹)</th><th>Total Value (₹)</th><th>Actions</th></tr></thead>
-        <tbody id="productTableBody"></tbody>
-      </table></div>
+
+      <!-- Live Search Filter -->
+      <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="Search by SKU Code, Name, or Category..." oninput="handleSearch()">
+      </div>
+
+      <!-- Master Inventory, Reorder & Forecasting Table -->
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>SKU</th>
+              <th>Product Name</th>
+              <th>Category</th>
+              <th>Price (₹)</th>
+              <th>Stock</th>
+              <th>Avg Daily Sales</th>
+              <th>Lead Time</th>
+              <th>Reorder Point (ROP)</th>
+              <th>Days of Stock Left</th>
+              <th>30-Day Demand Forecast</th>
+              <th>Recommended Reorder Qty</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="inventoryTableBody">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+
     </section>
 
-    <section id="stock" class="tab-content">
-      <h2>Stock In / Stock Out</h2>
+    <!-- 2. DAILY SALES & RESTOCK OPERATIONS TAB -->
+    <section id="operations-tab" class="tab-content">
       <div class="form-container">
-        <form id="stockForm">
+        <h3>Quick Stock In (Restock) / Stock Out (Retail Sale)</h3>
+        <form id="stockForm" onsubmit="handleQuickTransaction(event)">
           <div class="form-grid">
-            <div class="form-group"><label for="stockSelectProd">Select Product:</label><select id="stockSelectProd" required><option value="">-- Select Product --</option></select></div>
-            <div class="form-group"><label for="stockAction">Operation:</label><select id="stockAction" required><option value="add">Add Stock (Arrival / Restock)</option><option value="reduce">Reduce Stock (Dispatch / Sale)</option></select></div>
-            <div class="form-group"><label for="stockQty">Quantity:</label><input type="number" id="stockQty" min="1" step="1" placeholder="Enter amount" required></div>
+            <div class="form-group">
+              <label for="txnProductSelect">Select Retail Product:</label>
+              <select id="txnProductSelect" required>
+                <option value="">-- Select Product --</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="txnAction">Transaction Type:</label>
+              <select id="txnAction" required>
+                <option value="sale">Record Sale (Dispatch / Stock Out)</option>
+                <option value="restock">Receive Shipment (Stock In)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="txnQuantity">Quantity (Units):</label>
+              <input type="number" id="txnQuantity" min="1" placeholder="Enter units" required>
+            </div>
           </div>
-          <div class="form-actions"><button type="submit" class="btn btn-primary">Update Stock</button></div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Process Transaction</button>
+          </div>
         </form>
       </div>
-      <h3>Current Stock Quick View</h3>
-      <div class="table-wrap"><table class="data-table">
-        <thead><tr><th>Product ID</th><th>Product Name</th><th>Available Quantity</th><th>Stock Status</th></tr></thead>
-        <tbody id="stockQuickViewBody"></tbody>
-      </table></div>
+
+      <!-- Immediate Needs Table -->
+      <h3>Active Purchase Orders Needed Immediately</h3>
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>SKU</th>
+              <th>Item Name</th>
+              <th>Current Stock</th>
+              <th>Reorder Point</th>
+              <th>Deficit</th>
+              <th>Recommended Order Qty</th>
+              <th>Estimated Restock Cost (₹)</th>
+            </tr>
+          </thead>
+          <tbody id="urgentRestockTableBody">
+            <!-- Populated dynamically -->
+          </tbody>
+        </table>
+      </div>
     </section>
 
-    <section id="reports" class="tab-content">
-      <h2>Inventory Summary &amp; Reports</h2>
-      <div class="report-box"><h3>System Status Overview</h3><p>Category breakdown calculated from the current browser's LocalStorage data:</p><div id="reportSummaryText" style="margin-top: 10px;"></div></div>
-      <div class="danger-zone"><h3>Database Management</h3><p style="margin-bottom: 10px;">Reset the inventory to the initial demo products.</p><button class="btn btn-danger" type="button" onclick="resetToSampleData()">Reset to Sample Data</button></div>
-    </section>
-  </main>
+    <!-- 3. FORMULAS & DOCUMENTATION TAB -->
+    <section id="guide-tab" class="tab-content">
+      <div class="info-card">
+        <h3>Inventory Calculations Used in This System:</h3>
+        <ul>
+          <li><strong>Reorder Point (ROP):</strong> <code>(Average Daily Demand &times; Lead Time Days) + Safety Buffer Stock</code><br>
+          <em>Indicates the exact stock quantity at which a new order must be placed before running out.</em></li>
+          <br>
+          <li><strong>Stock Depletion Runout (Days Left):</strong> <code>Current Stock &divide; Average Daily Demand</code><br>
+          <em>Estimates how many business days remain until the item runs out of stock completely.</em></li>
+          <br>
+          <li><strong>30-Day Demand Forecast:</strong> <code>Average Daily Demand &times; 30 Days</code><br>
+          <em>Projects retail customer purchases over the next 1-month sales cycle.</em></li>
+          <br>
+          <li><strong>Suggested Reorder Quantity (EOQ estimate):</strong> <code>(30-Day Forecast + Safety Stock) &minus; Current Stock</code><br>
+          <em>Calculates exact replacement units needed to restore safe inventory levels.</em></li>
+        </ul>
+      </div>
 
-  <footer class="footer"><p>&copy; 2026 Warehouse Inventory Management System | College Engineering Project</p></footer>
+      <div class="form-container">
+        <h3>Sample Data Operations</h3>
+        <p style="margin-bottom: 12px; font-size: 13px;">Reset the database back to clean retail products (stored locally in browser LocalStorage):</p>
+        <button class="btn btn-danger" onclick="resetToRetailSamples()">Reset to Sample Retail Store Data</button>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>&copy; 2026 Retail Shop Inventory Management & Demand Forecasting System</p>
+  </footer>
 
   <script>
-    const SAMPLE_PRODUCTS = [
-      { id: "P101", name: "Dell Optical Mouse", category: "Electronics", quantity: 45, price: 450.00 },
-      { id: "P102", name: "Mechanical Keyboard", category: "Electronics", quantity: 8, price: 2499.00 },
-      { id: "P103", name: "Cardboard Box (Medium)", category: "Packaging", quantity: 120, price: 45.00 },
-      { id: "P104", name: "Adjustable Desk Chair", category: "Furniture", quantity: 4, price: 6500.00 },
-      { id: "P105", name: "Steel Screws (100-pack)", category: "Hardware", quantity: 75, price: 180.00 }
+    // Initial demo inventory for a retail provision store
+    const INITIAL_RETAIL_DATA = [
+      { id: "RET-101", name: "Fortune Sunflower Oil 1L", category: "Grocery", price: 145.00, stock: 12, dailySales: 8, leadTime: 3, safetyStock: 10 },
+      { id: "RET-102", name: "Tata Salt 1kg", category: "Grocery", price: 28.00, stock: 65, dailySales: 10, leadTime: 2, safetyStock: 15 },
+      { id: "RET-103", name: "Colgate MaxFresh 150g", category: "Personal Care", price: 110.00, stock: 9, dailySales: 4, leadTime: 4, safetyStock: 8 },
+      { id: "RET-104", name: "Maggi 2-Minute Noodles 280g", category: "Packaged Foods", price: 50.00, stock: 80, dailySales: 12, leadTime: 3, safetyStock: 20 },
+      { id: "RET-105", name: "Bru Instant Coffee 100g", category: "Beverages", price: 185.00, stock: 6, dailySales: 3, leadTime: 4, safetyStock: 5 },
+      { id: "RET-106", name: "Surf Excel Detergent 1kg", category: "Household", price: 135.00, stock: 24, dailySales: 5, leadTime: 2, safetyStock: 10 }
     ];
 
-    let products = [];
-    let lowStockThreshold = 10;
-    let editMode = false;
-    let currentEditId = null;
-    let alertTimer = null;
+    let inventory = [];
+    let isEditing = false;
+    let editTargetId = null;
 
-    function formatINR(amount) {
-      return "₹" + Number(amount).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    // Currency Formatter
+    function formatINR(val) {
+      return "₹" + Number(val).toLocaleString("en-IN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
     }
 
+    // App Initialization
     document.addEventListener("DOMContentLoaded", () => {
-      loadData();
+      loadStorageData();
       renderAllViews();
-      document.getElementById("productForm").addEventListener("submit", handleProductFormSubmit);
-      document.getElementById("stockForm").addEventListener("submit", handleStockUpdate);
-      document.getElementById("searchInput").addEventListener("input", handleSearch);
     });
 
-    function loadData() {
-      try {
-        const storedProducts = localStorage.getItem("warehouse_products_inr");
-        const storedThreshold = localStorage.getItem("warehouse_threshold_inr");
-        if (storedProducts) {
-          const parsed = JSON.parse(storedProducts);
-          products = Array.isArray(parsed) ? parsed : [...SAMPLE_PRODUCTS];
-        } else {
-          products = [...SAMPLE_PRODUCTS];
-          saveProducts();
-        }
-        if (storedThreshold !== null) {
-          const parsedThreshold = parseInt(storedThreshold, 10);
-          if (Number.isInteger(parsedThreshold) && parsedThreshold >= 1) lowStockThreshold = parsedThreshold;
-        }
-      } catch (error) {
-        products = [...SAMPLE_PRODUCTS];
-        showAlert("Saved browser data could not be read. Sample products have been loaded.", "error");
-      }
-      document.getElementById("thresholdInput").value = lowStockThreshold;
-    }
-
-    function saveProducts() {
-      try {
-        localStorage.setItem("warehouse_products_inr", JSON.stringify(products));
-      } catch (error) {
-        showAlert("Could not save data in this browser. Check storage settings.", "error");
+    // LocalStorage handlers
+    function loadStorageData() {
+      const stored = localStorage.getItem("retail_inventory_data");
+      if (stored) {
+        inventory = JSON.parse(stored);
+      } else {
+        inventory = [...INITIAL_RETAIL_DATA];
+        saveStorageData();
       }
     }
 
-    function switchTab(tabId) {
-      document.querySelectorAll(".tab-content").forEach(tab => tab.classList.toggle("active", tab.id === tabId));
-      document.querySelectorAll(".nav-btn").forEach(btn => btn.classList.toggle("active", btn.getAttribute("onclick").includes(tabId)));
+    function saveStorageData() {
+      localStorage.setItem("retail_inventory_data", JSON.stringify(inventory));
+    }
+
+    // Tab Navigation
+    function switchTab(targetId) {
+      document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
+      document.querySelectorAll(".nav-btn").forEach(el => el.classList.remove("active"));
+
+      document.getElementById(targetId).classList.add("active");
+      
+      const matchedBtn = Array.from(document.querySelectorAll(".nav-btn"))
+        .find(btn => btn.getAttribute("onclick").includes(targetId));
+      if (matchedBtn) matchedBtn.classList.add("active");
+
       renderAllViews();
     }
 
-    function showAlert(message, type) {
-      const alertBox = document.getElementById("alertBox");
-      alertBox.className = `alert alert-${type}`;
-      alertBox.textContent = message;
-      alertBox.classList.remove("hidden");
-      if (alertTimer) clearTimeout(alertTimer);
-      alertTimer = setTimeout(() => alertBox.classList.add("hidden"), 3500);
+    // Notification Banner
+    function notify(message, type = "success") {
+      const box = document.getElementById("alertBox");
+      box.className = `alert alert-${type}`;
+      box.innerText = message;
+      box.classList.remove("hidden");
+      setTimeout(() => box.classList.add("hidden"), 3500);
     }
 
+    // Business Math Calculations
+    function computeInventoryMetrics(item) {
+      // Reorder Point = (Lead Time Demand) + Safety Buffer
+      const rop = Math.ceil((item.dailySales * item.leadTime) + item.safetyStock);
+      
+      // Stock Runout time in Days
+      const daysRemaining = item.dailySales > 0 ? (item.stock / item.dailySales).toFixed(1) : "N/A";
+      
+      // Next 30 Days Forecast Demand
+      const forecast30 = Math.ceil(item.dailySales * 30);
+      
+      // Suggested Reorder Quantity to cover 30 days and keep safety stock
+      const targetHolding = forecast30 + item.safetyStock;
+      const reorderQty = item.stock <= rop ? Math.max(0, targetHolding - item.stock) : 0;
+      
+      const needsReorder = item.stock <= rop;
+
+      return { rop, daysRemaining, forecast30, reorderQty, needsReorder };
+    }
+
+    // Master Render Method
     function renderAllViews() {
-      renderDashboard();
-      const query = document.getElementById("searchInput").value.toLowerCase().trim();
-      renderProductTable(products.filter(p => p.id.toLowerCase().includes(query) || p.name.toLowerCase().includes(query)));
-      populateStockSelect();
-      renderStockQuickView();
-      renderReports();
+      renderMetrics();
+      renderInventoryTable(inventory);
+      populateTransactionDropdown();
+      renderUrgentRestockTable();
     }
 
-    function renderDashboard() {
-      let totalStock = 0, totalValue = 0;
-      const lowStockItems = [];
-      products.forEach(p => {
-        totalStock += Number(p.quantity);
-        totalValue += Number(p.quantity) * Number(p.price);
-        if (p.quantity <= lowStockThreshold) lowStockItems.push(p);
+    // KPI Cards
+    function renderMetrics() {
+      let totalUnits = 0;
+      let totalVal = 0;
+      let reorderCount = 0;
+
+      inventory.forEach(item => {
+        totalUnits += item.stock;
+        totalVal += (item.stock * item.price);
+        const calc = computeInventoryMetrics(item);
+        if (calc.needsReorder) reorderCount++;
       });
-      document.getElementById("totalProductsCount").textContent = products.length;
-      document.getElementById("totalStockCount").textContent = totalStock;
-      document.getElementById("lowStockCount").textContent = lowStockItems.length;
-      document.getElementById("totalInventoryValue").textContent = formatINR(totalValue);
-      const tbody = document.getElementById("lowStockTableBody");
-      tbody.replaceChildren();
-      if (!lowStockItems.length) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">All stock levels are adequate.</td></tr>';
+
+      document.getElementById("totalProductsCount").innerText = inventory.length;
+      document.getElementById("totalUnitsCount").innerText = totalUnits;
+      document.getElementById("reorderAlertCount").innerText = reorderCount;
+      document.getElementById("totalValuation").innerText = formatINR(totalVal);
+    }
+
+    // Table Rendering
+    function renderInventoryTable(items) {
+      const tbody = document.getElementById("inventoryTableBody");
+      tbody.innerHTML = "";
+
+      if (items.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="13" style="text-align:center;">No inventory records match the search.</td></tr>`;
         return;
       }
-      lowStockItems.forEach(p => {
+
+      items.forEach(item => {
+        const { rop, daysRemaining, forecast30, reorderQty, needsReorder } = computeInventoryMetrics(item);
         const tr = document.createElement("tr");
-        tr.className = "row-low-stock";
-        [p.id, p.name, p.category, p.quantity, formatINR(p.price)].forEach(value => {
-          const td = document.createElement("td");
-          td.textContent = value;
-          tr.appendChild(td);
-        });
-        const status = document.createElement("td");
-        status.innerHTML = '<span class="badge badge-low">Low Stock</span>';
-        tr.appendChild(status);
+        if (needsReorder) tr.className = "row-reorder-needed";
+
+        tr.innerHTML = `
+          <td><strong>${item.id}</strong></td>
+          <td>${item.name}</td>
+          <td>${item.category}</td>
+          <td>${formatINR(item.price)}</td>
+          <td><strong>${item.stock}</strong></td>
+          <td>${item.dailySales} / day</td>
+          <td>${item.leadTime} days</td>
+          <td>${rop} units</td>
+          <td>${daysRemaining} ${daysRemaining !== "N/A" ? 'days' : ''}</td>
+          <td><strong>${forecast30} units</strong></td>
+          <td>${needsReorder ? `<strong>${reorderQty} units</strong>` : '-'}</td>
+          <td>
+            <span class="badge ${needsReorder ? 'badge-reorder' : 'badge-ok'}">
+              ${needsReorder ? 'Order Now' : 'Optimal'}
+            </span>
+          </td>
+          <td>
+            <button class="btn btn-primary btn-sm" onclick="editProduct('${item.id}')">Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteProduct('${item.id}')">Del</button>
+          </td>
+        `;
         tbody.appendChild(tr);
       });
     }
 
-    function renderProductTable(itemsToDisplay) {
-      const tbody = document.getElementById("productTableBody");
-      tbody.replaceChildren();
-      if (!itemsToDisplay.length) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No products found.</td></tr>';
+    // Populate transaction dropdown
+    function populateTransactionDropdown() {
+      const select = document.getElementById("txnProductSelect");
+      select.innerHTML = '<option value="">-- Select Product --</option>';
+
+      inventory.forEach(item => {
+        const opt = document.createElement("option");
+        opt.value = item.id;
+        opt.textContent = `${item.id} - ${item.name} (Stock: ${item.stock})`;
+        select.appendChild(opt);
+      });
+    }
+
+    // Render Urgent Restock Order Table
+    function renderUrgentRestockTable() {
+      const tbody = document.getElementById("urgentRestockTableBody");
+      tbody.innerHTML = "";
+
+      const urgentItems = inventory.filter(item => computeInventoryMetrics(item).needsReorder);
+
+      if (urgentItems.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">All stock levels are above reorder points. No orders needed.</td></tr>`;
         return;
       }
-      itemsToDisplay.forEach(p => {
+
+      urgentItems.forEach(item => {
+        const { rop, reorderQty } = computeInventoryMetrics(item);
+        const deficit = rop - item.stock;
+        const estimatedCost = reorderQty * item.price;
+
         const tr = document.createElement("tr");
-        const isLow = p.quantity <= lowStockThreshold;
-        if (isLow) tr.className = "row-low-stock";
-        [p.id, p.name, p.category].forEach(value => {
-          const td = document.createElement("td");
-          td.textContent = value;
-          tr.appendChild(td);
-        });
-        const qty = document.createElement("td");
-        qty.textContent = p.quantity + (isLow ? " — Low Stock" : "");
-        tr.appendChild(qty);
-        [formatINR(p.price), formatINR(p.quantity * p.price)].forEach(value => {
-          const td = document.createElement("td");
-          td.textContent = value;
-          tr.appendChild(td);
-        });
-        const actions = document.createElement("td");
-        const editBtn = document.createElement("button");
-        editBtn.className = "btn btn-primary btn-sm";
-        editBtn.textContent = "Edit";
-        editBtn.addEventListener("click", () => editProduct(p.id));
-        const deleteBtn = document.createElement("button");
-        deleteBtn.className = "btn btn-danger btn-sm";
-        deleteBtn.textContent = "Delete";
-        deleteBtn.addEventListener("click", () => deleteProduct(p.id));
-        actions.append(editBtn, deleteBtn);
-        tr.appendChild(actions);
+        tr.className = "row-reorder-needed";
+        tr.innerHTML = `
+          <td><strong>${item.id}</strong></td>
+          <td>${item.name}</td>
+          <td>${item.stock}</td>
+          <td>${rop}</td>
+          <td>${deficit > 0 ? deficit : 0} units</td>
+          <td><strong>${reorderQty} units</strong></td>
+          <td><strong>${formatINR(estimatedCost)}</strong></td>
+        `;
         tbody.appendChild(tr);
       });
     }
 
-    function handleProductFormSubmit(event) {
-      event.preventDefault();
+    // Add or Update Product
+    function handleProductSubmit(e) {
+      e.preventDefault();
+
       const id = document.getElementById("prodId").value.trim();
       const name = document.getElementById("prodName").value.trim();
       const category = document.getElementById("prodCategory").value;
-      const quantity = Number(document.getElementById("prodQty").value);
-      const price = Number(document.getElementById("prodPrice").value);
+      const price = parseFloat(document.getElementById("prodPrice").value);
+      const stock = parseInt(document.getElementById("prodCurrentStock").value, 10);
+      const dailySales = parseFloat(document.getElementById("prodDailySales").value);
+      const leadTime = parseInt(document.getElementById("prodLeadTime").value, 10);
+      const safetyStock = parseInt(document.getElementById("prodSafetyStock").value, 10);
 
-      if (!id || !name || !category || !Number.isInteger(quantity) || !Number.isFinite(price)) {
-        showAlert("Please fill in all fields with valid information.", "error");
-        return;
-      }
-      if (quantity < 0 || price < 0) {
-        showAlert("Quantity and price cannot be negative.", "error");
-        return;
-      }
-
-      if (editMode) {
-        const index = products.findIndex(p => p.id === currentEditId);
-        if (index === -1) {
-          showAlert("Product could not be found. Please try again.", "error");
+      if (isEditing) {
+        const idx = inventory.findIndex(i => i.id === editTargetId);
+        if (idx !== -1) {
+          inventory[idx] = { id: editTargetId, name, category, price, stock, dailySales, leadTime, safetyStock };
+          saveStorageData();
+          notify(`Updated product: ${name}`);
           cancelEdit();
-          return;
         }
-        products[index] = { ...products[index], name, category, quantity, price };
-        showAlert(`Product "${name}" updated successfully.`, "success");
-        cancelEdit();
       } else {
-        if (products.some(p => p.id.toLowerCase() === id.toLowerCase())) {
-          showAlert(`Product ID "${id}" already exists. Use a unique ID.`, "error");
+        const exists = inventory.some(i => i.id.toLowerCase() === id.toLowerCase());
+        if (exists) {
+          notify(`Item Code "${id}" already exists. Use a unique code.`, "error");
           return;
         }
-        products.push({ id, name, category, quantity, price });
-        showAlert(`Product "${name}" added successfully.`, "success");
+
+        inventory.push({ id, name, category, price, stock, dailySales, leadTime, safetyStock });
+        saveStorageData();
+        notify(`Added product: ${name} with demand parameters`);
         document.getElementById("productForm").reset();
       }
-      saveProducts();
+
       renderAllViews();
     }
 
+    // Set Edit Mode
     function editProduct(id) {
-      const prod = products.find(p => p.id === id);
-      if (!prod) return;
-      switchTab("products");
-      editMode = true;
-      currentEditId = prod.id;
-      document.getElementById("formTitle").textContent = `Edit Product (${prod.id})`;
-      document.getElementById("prodId").value = prod.id;
+      const item = inventory.find(i => i.id === id);
+      if (!item) return;
+
+      switchTab("inventory-tab");
+
+      isEditing = true;
+      editTargetId = item.id;
+
+      document.getElementById("formTitle").innerText = `Edit Product & Demand Rules (${item.id})`;
+      document.getElementById("prodId").value = item.id;
       document.getElementById("prodId").disabled = true;
-      document.getElementById("prodName").value = prod.name;
-      document.getElementById("prodCategory").value = prod.category;
-      document.getElementById("prodQty").value = prod.quantity;
-      document.getElementById("prodPrice").value = prod.price;
-      document.getElementById("saveProdBtn").textContent = "Update Product";
-      document.getElementById("cancelEditBtn").classList.remove("hidden");
+      document.getElementById("prodName").value = item.name;
+      document.getElementById("prodCategory").value = item.category;
+      document.getElementById("prodPrice").value = item.price;
+      document.getElementById("prodCurrentStock").value = item.stock;
+      document.getElementById("prodDailySales").value = item.dailySales;
+      document.getElementById("prodLeadTime").value = item.leadTime;
+      document.getElementById("prodSafetyStock").value = item.safetyStock;
+
+      document.getElementById("saveBtn").innerText = "Update Forecast & Stock Details";
+      document.getElementById("cancelBtn").classList.remove("hidden");
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
+    // Cancel Edit Mode
     function cancelEdit() {
-      editMode = false;
-      currentEditId = null;
+      isEditing = false;
+      editTargetId = null;
       document.getElementById("productForm").reset();
       document.getElementById("prodId").disabled = false;
-      document.getElementById("formTitle").textContent = "Add New Product";
-      document.getElementById("saveProdBtn").textContent = "Save Product";
-      document.getElementById("cancelEditBtn").classList.add("hidden");
+      document.getElementById("formTitle").innerText = "Register / Update Retail Product";
+      document.getElementById("saveBtn").innerText = "Save Product & Compute Forecast";
+      document.getElementById("cancelBtn").classList.add("hidden");
     }
 
+    // Delete Product
     function deleteProduct(id) {
-      if (!confirm(`Are you sure you want to delete Product ID: ${id}?`)) return;
-      products = products.filter(p => p.id !== id);
-      saveProducts();
-      showAlert(`Product ${id} has been deleted.`, "success");
-      if (editMode && currentEditId === id) cancelEdit();
+      if (!confirm(`Delete product ${id} from tracking?`)) return;
+
+      inventory = inventory.filter(i => i.id !== id);
+      saveStorageData();
+      notify(`Product ${id} deleted.`);
+      if (isEditing && editTargetId === id) cancelEdit();
       renderAllViews();
     }
 
-    function handleSearch() {
-      const query = document.getElementById("searchInput").value.toLowerCase().trim();
-      renderProductTable(products.filter(p => p.id.toLowerCase().includes(query) || p.name.toLowerCase().includes(query)));
-    }
+    // Handle Quick Sale / Shipment In
+    function handleQuickTransaction(e) {
+      e.preventDefault();
 
-    function populateStockSelect() {
-      const select = document.getElementById("stockSelectProd");
-      const previousValue = select.value;
-      select.replaceChildren(new Option("-- Select Product --", ""));
-      products.forEach(p => select.add(new Option(`${p.id} - ${p.name} (Current: ${p.quantity})`, p.id)));
-      if (products.some(p => p.id === previousValue)) select.value = previousValue;
-    }
+      const prodId = document.getElementById("txnProductSelect").value;
+      const action = document.getElementById("txnAction").value;
+      const qty = parseInt(document.getElementById("txnQuantity").value, 10);
 
-    function handleStockUpdate(event) {
-      event.preventDefault();
-      const prodId = document.getElementById("stockSelectProd").value;
-      const action = document.getElementById("stockAction").value;
-      const changeQty = Number(document.getElementById("stockQty").value);
-      if (!prodId) return showAlert("Please select a product.", "error");
-      if (!Number.isInteger(changeQty) || changeQty <= 0) return showAlert("Please enter a whole-number quantity greater than zero.", "error");
-      const prod = products.find(p => p.id === prodId);
-      if (!prod) return;
-      if (action === "add") {
-        prod.quantity += changeQty;
-        showAlert(`Added ${changeQty} units to ${prod.name}. New quantity: ${prod.quantity}`, "success");
-      } else {
-        if (prod.quantity - changeQty < 0) return showAlert(`Cannot dispatch ${changeQty} units. Only ${prod.quantity} available in stock.`, "error");
-        prod.quantity -= changeQty;
-        showAlert(`Dispatched ${changeQty} units from ${prod.name}. Remaining: ${prod.quantity}`, "success");
+      const item = inventory.find(i => i.id === prodId);
+      if (!item) return;
+
+      if (action === "sale") {
+        if (item.stock < qty) {
+          notify(`Insufficient stock! Only ${item.stock} units available to sell.`, "error");
+          return;
+        }
+        item.stock -= qty;
+        notify(`Sold ${qty} units of ${item.name}. Remaining: ${item.stock}`);
+      } else if (action === "restock") {
+        item.stock += qty;
+        notify(`Received ${qty} units for ${item.name}. New Stock: ${item.stock}`);
       }
-      saveProducts();
-      document.getElementById("stockQty").value = "";
+
+      saveStorageData();
+      document.getElementById("txnQuantity").value = "";
       renderAllViews();
     }
 
-    function renderStockQuickView() {
-      const tbody = document.getElementById("stockQuickViewBody");
-      tbody.replaceChildren();
-      products.forEach(p => {
-        const tr = document.createElement("tr");
-        const isLow = p.quantity <= lowStockThreshold;
-        [p.id, p.name, p.quantity].forEach(value => {
-          const td = document.createElement("td");
-          td.textContent = value;
-          tr.appendChild(td);
-        });
-        const status = document.createElement("td");
-        status.innerHTML = `<span class="badge ${isLow ? "badge-low" : "badge-ok"}">${isLow ? "Low Stock Warning" : "In Stock"}</span>`;
-        tr.appendChild(status);
-        tbody.appendChild(tr);
-      });
+    // Search filter
+    function handleSearch() {
+      const q = document.getElementById("searchInput").value.toLowerCase().trim();
+      const filtered = inventory.filter(item => 
+        item.id.toLowerCase().includes(q) || 
+        item.name.toLowerCase().includes(q) || 
+        item.category.toLowerCase().includes(q)
+      );
+      renderInventoryTable(filtered);
     }
 
-    function updateThreshold() {
-      const val = Number(document.getElementById("thresholdInput").value);
-      if (!Number.isInteger(val) || val < 1) return showAlert("Please enter a valid whole-number threshold of 1 or more.", "error");
-      lowStockThreshold = val;
-      try { localStorage.setItem("warehouse_threshold_inr", String(lowStockThreshold)); } catch (error) {}
-      showAlert(`Minimum low stock threshold updated to ${lowStockThreshold} units.`, "success");
-      renderAllViews();
-    }
-
-    function renderReports() {
-      const summaryBox = document.getElementById("reportSummaryText");
-      const categories = {};
-      products.forEach(p => { categories[p.category] = (categories[p.category] || 0) + Number(p.quantity); });
-      const list = document.createElement("ul");
-      list.style.marginLeft = "20px";
-      Object.entries(categories).forEach(([category, total]) => {
-        const item = document.createElement("li");
-        const strong = document.createElement("strong");
-        strong.textContent = `${category}: `;
-        item.append(strong, document.createTextNode(`${total} total units stored`));
-        list.appendChild(item);
-      });
-      summaryBox.replaceChildren();
-      const heading = document.createElement("p");
-      const strong = document.createElement("strong");
-      strong.textContent = "Stock Breakdown by Category:";
-      heading.appendChild(strong);
-      summaryBox.append(heading, list);
-      if (!products.length) summaryBox.appendChild(document.createTextNode("No products currently in inventory."));
-    }
-
-    function resetToSampleData() {
-      if (!confirm("Are you sure you want to reset all data back to original sample items?")) return;
-      products = SAMPLE_PRODUCTS.map(p => ({ ...p }));
-      lowStockThreshold = 10;
-      saveProducts();
-      try { localStorage.setItem("warehouse_threshold_inr", "10"); } catch (error) {}
-      document.getElementById("thresholdInput").value = 10;
-      cancelEdit();
-      showAlert("Warehouse data reset to initial sample data.", "success");
+    // Reset database to retail defaults
+    function resetToRetailSamples() {
+      if (!confirm("Reset database to initial retail demo products?")) return;
+      inventory = [...INITIAL_RETAIL_DATA];
+      saveStorageData();
+      notify("Database reset to demo retail data.");
       renderAllViews();
     }
   </script>
